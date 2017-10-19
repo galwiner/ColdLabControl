@@ -1,36 +1,53 @@
-function [seq,delayVec]=TOFseq(channelTable,trigCahnnel,N,maxT,delay,motLoadTime)
+function seq=TOFseq(channelTable,cameraName,delay,motLoadTime)
 %Gal W 080917
-%sequence to collect two images from the camera connected to trig channel
-%delay is the time between images in microseconds. 
+%sequence to collect images from the camera connected to trig channel
+%delay is the time MOT relase and image in microseconds. 
 %default delay =100uS, default mot load time 1 s
-%N is number of images, maxT is the longest TOF time
-%default N=2, default maxT=1500
+%MOT is unloaded 100 mS after the second image is taken
+%
 
-if nargin=2
-    N=2;
-    maxT=1500;
-    delay=100;
-    motLoadTime=1e6; 
+
+if nargin==1
+    cameraName='pixelfly';
+    delay=1;
+    motLoadTime=2e6; 
 end
 
-if nargin=3
-    maxT=1500;
-    delay=100;
-    motLoadTime=1e6; 
+if nargin==2
+    delay=1;
+    motLoadTime=2e6; 
 end
 
-if nargin=4
-    delay=100;
-    motLoadTime=1e6; 
+
+if nargin==3
+    motLoadTime=2e6; 
+end
+if strcmp(cameraName,'pixelfly')
+    intrinsicDelay=5.6; %microseconds (see manual)
+    
 end
 
-%make a log spaced trigger time vector including just after Mot loading (no delay)
-delayVec=[motLoadTime,logspace(motLoadTime,motLoadTime+maxT,N-1)]; 
+exposure=500;
 
-for ind=1:N
     seq=[LoadMotSeq(channelTable),...
-        trigImage(channelTable,delayVec(ind),'pixelfly')
-        trigImage(channelTable,delayVec(ind),'pixelfly'),...
-        UnloadMotSeq(channelTable,motLoadTime+maxT)];
-  end
+         UnloadMotSeq(channelTable,motLoadTime),...
+         {Pulse(channelTable.PhysicalName{'cooling'},motLoadTime+delay,exposure),Pulse(channelTable.PhysicalName{'repump'},motLoadTime+delay,exposure)},...
+        trigImage(channelTable,motLoadTime+delay-intrinsicDelay,cameraName) 
+        ]; %trigger the image before the intended trigger time to compensate for intrinsic delay
+
+%     seq={AnalogPulse(channelTable.PhysicalName{'IGBT'},0,0,5),...
+%     AnalogPulse(channelTable.PhysicalName{'CircCoil'},0,0,100*10/220),...
+%     Pulse(channelTable.PhysicalName{'repump'},0,0),...
+%     Pulse(channelTable.PhysicalName{'cooling'},0,0)...
+%     AnalogPulse(channelTable.PhysicalName{'IGBT'},motLoadTime,0,0),...
+%     AnalogPulse(channelTable.PhysicalName{'CircCoil'},motLoadTime,0,0),...
+%     Pulse(channelTable.PhysicalName{'repump'},motLoadTime,-1),...
+%     Pulse(channelTable.PhysicalName{'cooling'},motLoadTime,-1),...
+%     Pulse(channelTable.PhysicalName{cameraName},motLoadTime+delay-intrinsicDelay,20),...
+%     Pulse(channelTable.PhysicalName{'cooling'},motLoadTime+delay,0),...
+%     Pulse(channelTable.PhysicalName{'repump'},motLoadTime+delay,0)
+%     }; %trigger the image before the intended trigger time to compensate for intrinsic delay
+
+
+
 end

@@ -13,4 +13,4 @@ if nargin==2
     cameraName='pixelfly';
 end
 
-seq={Pulse(channelTable.PhysicalName{'pixelfly'},trigTime,20)};
+seq={Pulse(channelTable.PhysicalName{cameraName},trigTime,20)}; 

@@ -6,14 +6,14 @@ function seq=LoadMotSeq(channelTable,startTime,setCurrent)
 %setCurrent sets the circular coil current to 100 A by default.
 if nargin==1
     startTime=0;
-    setCurrent = 100*10/220;
+    setCurrent = 100;
 end
 
 if nargin==2
-    setCurrent = 100*10/220;
+    setCurrent = 100;
 end
 
-setCurrnet = setCurrent * 10/220; %converting amps to volts for the analog channel
+setCurrent = setCurrent * 10/220; %converting amps to volts for the analog channel
 seq={AnalogPulse(channelTable.PhysicalName{'IGBT'},startTime,0,5),...
     AnalogPulse(channelTable.PhysicalName{'CircCoil'},startTime,0,setCurrent),...
     Pulse(channelTable.PhysicalName{'repump'},startTime,0),...
