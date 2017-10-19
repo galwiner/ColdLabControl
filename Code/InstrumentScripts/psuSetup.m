@@ -31,7 +31,7 @@ if circBool
     
 % set limits to maximum. Current is limited to 120 until we gwt a new IGBT
     fprintf(t1,'system:limits:voltage 18,ON');
-    fprintf(t1,'system:limits:current 120,ON');
+    fprintf(t1,'system:limits:current 220,ON');
 
     fprintf(t1,'source:voltage 18');
 % turn output on 
@@ -60,8 +60,9 @@ if rectBool
     fprintf(t1,'system:remote:cc:status slot4');
     
 % set limits to maximum. Current is limited to 120 until we gwt a new IGBT
+%changed the limit after replacing IGBT. let's see. 16/10/17 GW
     fprintf(t1,'system:limits:voltage 18,ON');
-    fprintf(t1,'system:limits:current 120,ON');
+    fprintf(t1,'system:limits:current 220,ON');
 
     fprintf(t1,'source:voltage 18');
 % turn output on 

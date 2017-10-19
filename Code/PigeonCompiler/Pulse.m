@@ -98,35 +98,6 @@ classdef Pulse
                 ts=pulses{i}.Tstart;
                 te=pulses{i}.Tend;
                 ch=pulses{i}.Channel;
-                if (te-ts)==0
-                    % only ON pulse
-                    timearray(index,:)=[ts,ch,1,0];
-                    index=index+1;
-                elseif (te-ts)<0
-                    % only Off pulse
-                    timearray(index,:)=[ts,ch,2,0];
-                    index=index+1;
-                    precede=0;
-                else
-                    timearray(index,:)=[ts,ch,1,0];
-                    timearray(index+1,:)=[te,ch,2,0];
-                    index=index+2;
-                end
-                if (pulses{i}.setFreq)
-                    timearray(index,:)=[ts-precede,ch,3,pulses{i}.Freq];
-                    precede=precede+20;
-                    index=index+1;
-                end
-                if (pulses{i}.setAmp)
-                    timearray(index,:)=[ts-precede,ch,5,pulses{i}.Amp];
-                    precede=precede+20;
-                    index=index+1;
-                end
-                if (pulses{i}.setPhase)
-                    timearray(index,:)=[ts-precede,ch,4,pulses{i}.Phase];
-                    index=index+1;
-                end
-                
                 if (pulses{i}.analog)
                     if (te-ts)==0
                         % only ON pulse
@@ -142,9 +113,36 @@ classdef Pulse
                         timearray(index+1,:)=[te,ch,2,0];
                         index=index+2;
                     end
-                    
+                else
+                    if (te-ts)==0
+                        % only ON pulse
+                        timearray(index,:)=[ts,ch,1,0];
+                        index=index+1;
+                    elseif (te-ts)<0
+                        % only Off pulse
+                        timearray(index,:)=[ts,ch,2,0];
+                        index=index+1;
+                        precede=0;
+                    else
+                        timearray(index,:)=[ts,ch,1,0];
+                        timearray(index+1,:)=[te,ch,2,0];
+                        index=index+2;
+                    end
+                    if (pulses{i}.setFreq)
+                        timearray(index,:)=[ts-precede,ch,3,pulses{i}.Freq];
+                        precede=precede+20;
+                        index=index+1;
+                    end
+                    if (pulses{i}.setAmp)
+                        timearray(index,:)=[ts-precede,ch,5,pulses{i}.Amp];
+                        precede=precede+20;
+                        index=index+1;
+                    end
+                    if (pulses{i}.setPhase)
+                        timearray(index,:)=[ts-precede,ch,4,pulses{i}.Phase];
+                        index=index+1;
+                    end
                 end
-                %
             end
             timearray(index:end,:)=[];
             timearray=sortrows(timearray);

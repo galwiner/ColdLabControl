@@ -1,4 +1,7 @@
 function seqUpload(seq,DEBUG)
+
+
+%%% Comment 
 if nargin==1
     DEBUG=0;
 end
@@ -15,7 +18,7 @@ if ~DEBUG
     com.WaitForHostIdle;
     com.Execute(1); 
     com.Delete;
-    catch err
-        disp(['ERROR: ' err.message ' OCCURED IN: ' mfilename])
+    catch
+        error(['ERROR: ' err.message ' OCCURED IN: ' mfilename]);
     end
 end

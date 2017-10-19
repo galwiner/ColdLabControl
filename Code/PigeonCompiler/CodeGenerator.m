@@ -8,16 +8,18 @@ classdef CodeGenerator < handle
         
         CommandList =  {'Do nothing'  ,'Analog out'  ,'Digital out',...
             'Photon count','Register'    ,'If'         ,...
-            'Goto T/F'    ,'Push to FIFO','End program'};
-        SubcommandList ={'NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA';...
-            'AOO','AO1','AO2','AO3','AO4','NA','NA','NA','NA','NA','NA','NA','NA'  ;...
-            'DOO','DO1','DO2','DO3','DO4','DO5','DO6','DO7','DO8','DO9','DO10','DO11','RAPtrig';...
-            'PMT1+PMT2->RegA','PMT1->RegA','PMT2->RegA','reset','PMT1&PMT2>RegA','NA','NA','NA','NA','NA','NA','NA','NA';...
-            'par1->RegA','par1->RegB','par1->RegC','Inc RegC','Inc RegA','RegB->RegC','RegB+flag[0]->RegB','Pause','RegB+RegA->RegB','AI1toPhase->RegD','(RegD+v1)*2^v2l*v2h->RegD','pauseMemoryBlock','NA';...
-            'RegA=par1','RegB>par1','RegC=par1','RegB>RegC','ExtTrig rising edge','NA','NA','NA','NA','NA','NA','NA','NA';...
-            'NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA';...
-            'RegA','RegB','RegC','PhotonPhase','NA','NA','NA','NA','NA','NA','NA','NA','NA';...
-            'NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA'};
+            'Goto T/F'    ,'Push to FIFO','End program','GenRamp','GenLoadTrig'};
+        SubcommandList ={'NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA';... %0
+            'AOO','AO1','AO2','AO3','AO4','NA','NA','NA','NA','NA','NA','NA','NA'  ;... %1
+            'DOO','DO1','DO2','DO3','DO4','DO5','DO6','DO7','DO8','DO9','DO10','DO11','RAPtrig';... %2
+            'PMT1+PMT2->RegA','PMT1->RegA','PMT2->RegA','reset','PMT1&PMT2>RegA','NA','NA','NA','NA','NA','NA','NA','NA';... %3
+            'par1->RegA','par1->RegB','par1->RegC','Inc RegC','Inc RegA','RegB->RegC','RegB+flag[0]->RegB','Pause','RegB+RegA->RegB','AI1toPhase->RegD','(RegD+v1)*2^v2l*v2h->RegD','pauseMemoryBlock','NA';... %4
+            'RegA=par1','RegB>par1','RegC=par1','RegB>RegC','ExtTrig rising edge','NA','NA','NA','NA','NA','NA','NA','NA';... %5
+            'NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA';... %6
+            'RegA','RegB','RegC','PhotonPhase','NA','NA','NA','NA','NA','NA','NA','NA','NA';... %7
+            'NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA';... %8
+            'ON','OFF','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA';...%9
+            'NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA';}; %10
         
     end
     
@@ -118,8 +120,8 @@ classdef CodeGenerator < handle
                                 % Push RegB to FIFO :Command 7 subcommand 1
                                 obj.code(obj.currentline+2,:) = [ 7 , 1 , 0 , 0];
                                 obj.currentline=obj.currentline+3;
-                                obj.numofreadout=obj.numofreadout+1; %what is this variable?
-                                case 'Analog'
+                                obj.numofreadout=obj.numofreadout+1;
+                            case 'Analog'
                                 % switch off analog channel
                                 obj.code(obj.currentline,:)=[1,PulseChannelInfo(channel,'AnalogSwitch'),parameter,0];
                                 obj.currentline=obj.currentline+1;
@@ -169,6 +171,12 @@ classdef CodeGenerator < handle
             end %for loop
         end % SegGen
         
+        function GenLodingMeasTrig(obj)
+          %sets the AI0 channal measurement trig to high
+            obj.code(obj.currentline,:)=[10 0 0 0];
+            obj.currentline=obj.currentline+1;
+        end
+        
         function GenSetAO(obj,ChStr,Var)
             %             this function generates analog output commands in the code
             %             matrix. only analog output chnnels that are implemented in
@@ -183,7 +191,7 @@ classdef CodeGenerator < handle
                 case 'AO3'
                     obj.code(obj.currentline,:)=[1 3 Var 0];
                     obj.currentline=obj.currentline+1;
-                    case 'AO4'
+                case 'AO4'
                     obj.code(obj.currentline,:)=[1 4 Var 0];
                     obj.currentline=obj.currentline+1;
                 otherwise
@@ -422,6 +430,16 @@ classdef CodeGenerator < handle
             obj.code(elseLine,3)=obj.currentline;
             obj.code(elseLine,4)=obj.currentline;
         end
+        
+        function GenSquareWave(obj,bool,period)
+            %start/stop square wave on Connector1/DIO6 with given period in uS
+            %if bool is 1, start if book is 0, stop.
+            period=40*period; %convert uS to clock cycles
+            c=typecast(int32(period-1),'int16');
+            obj.code(obj.currentline,:)=[9,bool,c(1),c(2)];
+            obj.currentline=obj.currentline+1;
+        end
+        
         
         function GenFinish(obj)
             % End and reset program. command=8 ...

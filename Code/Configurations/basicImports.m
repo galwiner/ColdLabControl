@@ -1,7 +1,13 @@
-%script to load all required control system params
+%Gal. W 080917 
+%script to load all required control system params and generate p params
+%object
 %assumes ControlSystem code base is in path
 load('channelTable.mat')
 
+sequencesDir=dir(fileparts(which('LoadMotSeq')));
+sequencesDir=sequencesDir(~ismember({sequencesDir.name},{'.','..'}));
+
+% ControlSystemDir=whi
 %%import physical constants in MKS %%
 %%_________________________________%%
 
@@ -13,5 +19,6 @@ consts.e=1.60217662e-19; %electron charge
 consts.rb87D1=2*pi*377.107463380e14; %D1 transition Rb87
 consts.rb87D2=2*pi*384.2304844685e14; %D2 transition Rb87
 
-
+%pixelfly params structure
+% p.cam_params(1);
 

@@ -40,19 +40,21 @@ classdef Tcp2Labview <handle
         end
         
         function Delete(obj)
-            if (obj.UseOpenChannel==false)
-                fclose(obj.TcpID);
-                delete(obj.TcpID);
-            end
+%             if (obj.UseOpenChannel==false)
+%                 fclose(obj.TcpID);
+%                 delete(obj.TcpID);
+%             end
+            fclose(obj.TcpID);
+            delete(obj.TcpID);
             %release semaphore
-            TCPsem=Semaphore.me();
-            TCPsem.release;
+%             TCPsem=Semaphore.me();
+%             TCPsem.release;
         end 
         
         function intsend=UploadCode(obj,codeobj,dataBlock) 
             %lock semaphore
-            TCPsem=Semaphore.me();
-            TCPsem.lock;
+%             TCPsem=Semaphore.me();
+%             TCPsem.lock;
             % ---------- write program to shared memory ------------
             % set the server to read from client
             try 
@@ -192,188 +194,28 @@ classdef Tcp2Labview <handle
                 end
             end 
             %unlock semaphore
-            TCPsem=Semaphore.me();
-            TCPsem.release;
+%             TCPsem=Semaphore.me();
+%             TCPsem.release;
         end 
         
-        function out = ReadNoiseEaterDetector (obj)
-            TCPsem=Semaphore.me();
-            TCPsem.lock;
-            % set the server to read from client
-            fwrite(obj.TcpID,int8(0),'int8');
-            % set  host current operation to 'ReadNoiseEater'
-            fwrite(obj.TcpID,int16([0 1 7]),'int16');
-            % set the server to write to client
-            fwrite(obj.TcpID,int8(1),'int8');
-            % set address to Noise Eater detector  (AI1)
-            fwrite(obj.TcpID,[int16(35) 1],'int16');
-            out=fread(obj.TcpID,1,'int16'); 
-            TCPsem.release;     
-        end
-        
-        function UpdateTrapElectrode(obj,oldDCL,DCR,Commensation,DCL,Compensation)
-           %lock semaphore
-            TCPsem=Semaphore.me();
-            TCPsem.lock;
-            % set the server to read from client
-            fwrite(obj.TcpID,int8(0),'int8');
-            %Update the Shared memory in then Host
-            fwrite(obj.TcpID,int16([11 10 typecast(single(oldDCL),'int16'),...
-                                          typecast(single(DCR),'int16'),...                        
-                                          typecast(single(Commensation),'int16'),...                        
-                                          typecast(single(DCL),'int16'),...                        
-                                          typecast(single(Compensation),'int16')]),'int16');
- 
-            % set the server to read from client
-            fwrite(obj.TcpID,int8(0),'int8');
-            % set  host current operation to 'Update Trap Electrode'=3
-            fwrite(obj.TcpID,int16([0 1 3]),'int16');
-            %release semaphore
-            TCPsem.release;
-        end 
-
-        function UpdateRAP(obj,duration,amp)
+        function data=readMemoryBlock(obj,startAddress,blockSize)
             %lock semaphore
-            TCPsem=Semaphore.me();
-            TCPsem.lock;
-            % Calc PhaseIncrement form duration which is the half cycle time 
-            %phase increment = [(frequency / FPGA clock rate) * 2^32]
-            PhaseIncrement=round(1/2/duration/40*2^32); 
-            % set the server to read from client
-            fwrite(obj.TcpID,int8(0),'int8');
-            %Update the Shared memory in the Host
-            fwrite(obj.TcpID,int16([21 3  typecast(uint32(PhaseIncrement),'int16') int16(amp)]),'int16');
-                                          
-            % set the server to read from client
-            fwrite(obj.TcpID,int8(0),'int8');
-            % set  host current operation to 'Update Rap Phase increment'=4
-            fwrite(obj.TcpID,int16([0 1 4]),'int16');
-            %release sem
-            TCPsem.release;
-        end
-   
-        function UpdateWavePlates(obj,pmt1Position,pmt2Position)
-            %lock semaphore
-            TCPsem=Semaphore.me();
-            TCPsem.lock;
-            % set the server to read from client
-            fwrite(obj.TcpID,int8(0),'int8');
-            %Update the Shared memory in the Host
-            fwrite(obj.TcpID,int16([25 2 pmt1Position pmt2Position]),'int16');
-                                          
-            % set the server to read from client
-            fwrite(obj.TcpID,int8(0),'int8');
-            % set  host current operation to 'Update wavwplate position'=6
-            fwrite(obj.TcpID,int16([0 1 6]),'int16');
-            %release sem
-            TCPsem.release;
-        end
-        
-         function ResetWavePlates(obj,resetWP)
-            % resetWP == 1 reset waveplate 1
-            %           2 reset waveplate 2
-            %           3 reset both
-            % takes ~50 s per waveplate
-            %lock semaphore
-            TCPsem=Semaphore.me();
-            TCPsem.lock;
-            switch resetWP
-                case 1 % set  host current operation to 'reset waveplate 1'=7, 
-                    % set the server to read from client
-                    fwrite(obj.TcpID,int8(0),'int8');
-                    fwrite(obj.TcpID,int16([0 1 7]),'int16');
-                case 2 % set  host current operation to 'reset waveplate 2'=8, 
-                    % set the server to read from client
-                    fwrite(obj.TcpID,int8(0),'int8');
-                    fwrite(obj.TcpID,int16([0 1 8]),'int16');
-                case 3 % set  host current operation to 'reset waveplates'=9, 
-                    % set the server to read from client
-                    fwrite(obj.TcpID,int8(0),'int8');
-                    fwrite(obj.TcpID,int16([0 1 9]),'int16');
-                otherwise
-                    % do nothing
-            end
-            
-            %release sem
-            TCPsem.release;
-        end
-        
-        function DisableWavePlates(obj)
-            %lock semaphore
-            TCPsem=Semaphore.me();
-            TCPsem.lock;
-            fwrite(obj.TcpID,int8(0),'int8');
-            fwrite(obj.TcpID,int16([0 1 10]),'int16');
-            %release sem
-            TCPsem.release;
-        end
-        
-        function UpdateBfield(obj,v)
-            %lock semaphore
-            TCPsem=Semaphore.me();
-            TCPsem.lock;
-            % update the Bfield feedforward parameters:
-            % v=[50Hz delay, 50Hz amp nomenator,50Hz Amp denomenator, 
-            %    50Hz invert sig,
-            %    150Hz delay, 150Hz amp nomenator,150Hz Amp denomenator,
-            %    150 Hz invert sig, Add sig+sig^3, oldFF,
-            %    nom sig1, n sig 1, invert sig1,phase delay
-            %    nom sig2, n sig 2, invert sig2, phase delay
-            %    PLL delay, new FF
-            %   ]
-            % delay = the 50Hz output delay, actual delay=delay*loopPeriod
-            % (default=10 usec)
-            % where "loopPeriod" is given in FPGA_TARGET, pigeon_ver1_8.vi,
-            % Bfield tab.
-            % amp="output nomenator factor for sig" variable in that tab.
-            
-            % set the server to read from client
-            fwrite(obj.TcpID,int8(0),'int8');
-            %Update the Shared memory in the Host
-            fwrite(obj.TcpID,int16([31 20  int16(v)]),'int16');
-                                          
-            % set the server to read from client
-            fwrite(obj.TcpID,int8(0),'int8');
-            % set  host current operation to 'Update Bfield FF variables'=5
-            fwrite(obj.TcpID,int16([0 1 5]),'int16');
-            %release semaphore
-            TCPsem.release;
-        end
-
-        function SetAO7(obj,c)
-            %lock semaphore
-            TCPsem=Semaphore.me();
-            TCPsem.lock;
-            % set the server to read from client
-            fwrite(obj.TcpID,int8(0),'int8');
-            %Update the Shared memory in the Host
-            fwrite(obj.TcpID,int16([24 1 int16(c)]),'int16');
-                                          
-            % set the server to read from client
-            fwrite(obj.TcpID,int8(0),'int8');
-            % set host current operation to 'Update Rap Phase increment'=4
-            fwrite(obj.TcpID,int16([0 1 4]),'int16');
-            % release sem
-            TCPsem.release;
-        end
-        
-        function status=GetLasersStatus(obj)
-            %lock semaphore
-            TCPsem=Semaphore.me();
-            TCPsem.lock;
+%             TCPsem=Semaphore.me();
+%             TCPsem.lock;
             % set the server to write to client
             fwrite(obj.TcpID,int8(1),'int8');
             % set address to Laser status  base address=4 
-            fwrite(obj.TcpID,int16([4 1]),'int16');
-            status=fread(obj.TcpID,1,'int16');
+            fwrite(obj.TcpID,int16([startAddress blockSize]),'int16');
+            data=fread(obj.TcpID,[1 blockSize],'int16');
             %release sem
-            TCPsem.release;
-        end
-        
+%             TCPsem.release;
+        end       
+    
+
         function WaitForHostIdle(obj,timelimit)
             HostProcess=1;
             if ~exist('timelimit')
-                timelimit=120; % 60 so time limit, in seconds
+                timelimit=3; % 60 so time limit, in seconds
             end
             tich=tic;
             while (HostProcess~=0)&&(toc(tich)<timelimit)
@@ -385,9 +227,9 @@ classdef Tcp2Labview <handle
                 %pause(0.01);
             end
             if toc(tich)>timelimit
-                fprintf(['FPGA exceeded timelimit ' 'stuck in waitforhostidle. Waiting on your respeons!']);
-                emailFile([],'FPGA exceeded timelimit','stuck in waitforhostidle. Waiting on your respeons!');
-                pause;
+                fprintf(['FPGA exceeded timelimit ' 'stuck in waitforhostidle. Waiting on your response!']);
+%                 emailFile([],'FPGA exceeded timelimit','stuck in waitforhostidle. Waiting on your respeons!');
+%                 pause;
             end
         end
         
