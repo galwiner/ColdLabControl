@@ -1,14 +1,15 @@
 % This script loads the MOT and triggers the photodetector analog readout
 %24/10/2017 LD + GW
-
 clear all
+Icirc=100;
+
 % close all
 clc
 basicImports
 seqUpload(UnloadMotSeq(channelTable)); %make sure the MOT is not loaded
 prog=CodeGenerator(); 
 prog.GenLodingMeasTrig; %trigger the analor readout loop. at this time (24/10/17) the readouts are 5ms apart. total 5 second readout
-seq=LoadMotSeq(channelTable,0,100); %load the mot
+seq=LoadMotSeq(channelTable,0,Icirc); %load the mot
 prog.GenSeq(seq);
 prog.GenFinish;
 prog.DisplayCode();
@@ -26,14 +27,14 @@ com.Delete;
 
 params=struct();
 params.Idis=5; %dispenser current A
-params.IcircCoil=100; %circular coils
+params.IcircCoil=Icirc; %circular coils
 
 figure;
 plot(t,dat);
 
-foldername='D:\Box Sync\Lab\ExpCold\Measurements\2017\10\24'; %TODO make auto saving func
+foldername='D:\Box Sync\Lab\ExpCold\Measurements\2017\10\26'; %TODO make auto saving func
 
-filename='241017_10.mat';
+filename='261017_09.mat';
 
 
 save(fullfile(foldername,filename),'t','dat','params');

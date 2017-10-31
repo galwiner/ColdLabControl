@@ -1,4 +1,9 @@
-function seq=channelToggleSeq(chanName,stateBool)
+function seq=channelToggleSeq(channelTable,chanName,stateBool)
+
+if ~exist('channelTable','var')
+    basicImports
+end
+
 if nargin<2
     state=0; %turn on 
 else
@@ -12,5 +17,5 @@ else
 end
 
     
-seq={Pulse(chanName,0,state)};
+seq={Pulse(channelTable.PhysicalName{chanName},0,state)};
 end
