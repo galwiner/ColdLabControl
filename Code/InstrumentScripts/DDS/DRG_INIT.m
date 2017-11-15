@@ -2,8 +2,8 @@
 
 function [  ] = DRG_INIT(obj,UP_FREQUENCY,DOWN_FREQUENCY,dtP,dtN,dfP,dfN)
 % [[MHz], [MHz], timesteps_upramp [sec], timesteps_downramp [sec],freqstep_upramp [Hz],freqstep_downramp [Hz]
-% obj.s = serial('COM9','BaudRate',9600,'DataBits',8);
-% fopen(obj.s);
+obj.s = serial('COM9','BaudRate',9600,'DataBits',8);
+fopen(obj.s);
 fsys=1000;
 DRG_LIMITS_UP=(2^32)*(UP_FREQUENCY)/(fsys);
 DRG_LIMITS_DOWN=round((2^32)*(DOWN_FREQUENCY)/(fsys));

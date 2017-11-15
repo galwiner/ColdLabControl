@@ -19,8 +19,11 @@ classdef Thorcam < handle
     
     methods
         function obj = Thorcam()
-            
+            try
             [obj.cam, obj.ImageData, obj.err]=obj.initiate();
+            catch 
+                error('Initiating thorcam failed. Is the Thorcam native software running?');
+            end
             scale=1;
         end
         
@@ -51,8 +54,8 @@ classdef Thorcam < handle
                 err = cam.PixelFormat.Set(uc480.Defines.ColorMode.SensorRaw8);
                 
                 err = cam.PixelFormat.Set(uc480.Defines.ColorMode.SensorRaw8);
-                
-                % Set up camera for copying image to Matlab memory for processing
+%                 
+%                 % Set up camera for copying image to Matlab memory for processing
                 [err, ImageData.ID] = cam.Memory.Allocate(true);
                 [err, ImageData.Width, ImageData.Height, ImageData.Bits, ImageData.Pitch]= cam.Memory.Inquire(ImageData.ID);
                 cam.DirectRenderer.SetStealFormat(uc480.Defines.ColorMode.SensorRaw8);

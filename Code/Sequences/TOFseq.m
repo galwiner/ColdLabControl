@@ -1,4 +1,4 @@
-function seq=TOFseq(channelTable,cameraName,delay,motLoadTime)
+function seq=TOFseq(channelTable,cameraName,delay,motLoadTime,exposureTime)
 %Gal W 080917
 %sequence to collect images from the camera connected to trig channel
 %delay is the time MOT relase and image in microseconds. 
@@ -27,11 +27,11 @@ if strcmp(cameraName,'pixelfly')
     
 end
 
-exposure=500;
+% exposure=500;
 
     seq=[LoadMotSeq(channelTable),...
          UnloadMotSeq(channelTable,motLoadTime),...
-         {Pulse(channelTable.PhysicalName{'cooling'},motLoadTime+delay,exposure),Pulse(channelTable.PhysicalName{'repump'},motLoadTime+delay,exposure)},...
+         {Pulse(channelTable.PhysicalName{'cooling'},motLoadTime+delay,exposureTime),Pulse(channelTable.PhysicalName{'repump'},motLoadTime+delay,exposureTime)},...
         trigImage(channelTable,motLoadTime+delay-intrinsicDelay,cameraName) 
         ]; %trigger the image before the intended trigger time to compensate for intrinsic delay
 

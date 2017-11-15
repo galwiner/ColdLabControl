@@ -5,11 +5,17 @@ classdef keysightScope < handle
         sc
         waveform
         scopename
+        easyname %set easy name for the scope
     end
     
     methods
-        function obj = keysightScope(scopename)
+        function obj = keysightScope(scopename,easyname)
             %KEYSIGHTSCOPE Construct an instance of this class
+            if nargin==1
+                obj.easyname=scopename;
+            else 
+                obj.easyname=easyname;
+            end
             
             obj.scopename=scopename;
             obj.sc = visa('agilent',obj.scopename);
@@ -18,10 +24,42 @@ classdef keysightScope < handle
             obj.sc.ByteOrder = 'littleEndian';
             fopen(obj.sc);
             fprintf(obj.sc,'*RST');
-            fprintf(obj.sc,':WAVEFORM:SOURCE CHAN1');
+%             fprintf(obj.sc,':WAVEFORM:SOURCE CHAN1');
             fprintf(obj.sc,':WAV:POINTS:MODE NORMAL');
             fprintf(obj.sc,':WAV:POINTS 100000');
+            obj.setProbeRatio(1,1);
+            obj.setProbeRatio(2,1);
+            obj.setProbeRatio(3,1);
+            obj.setProbeRatio(4,1);
         end
+        
+        function getStoppedChan(obj,chanum)
+            obj.setState('stop');
+            query(obj.sc,':WAV:DATA?')
+        end
+        
+        function setBase(obj)
+        obj.setChan(1,1);
+        obj.setChan(2,1);
+        obj.setChan(3,1);
+        obj.setChan(4,1);
+        obj.setVrange(1,1);
+        obj.setVrange(2,1);
+        obj.setVrange(3,1);
+        obj.setVrange(4,1);
+        obj.setTimebase(1);
+        obj.setTrigger(1,1,'POS');
+        end
+        
+        function setTimeMode(obj,mode)
+            modes={'MAIN','WIND','XY','ROLL'};
+            if ~any(strcmp(modes,mode))
+            error('mode must be MAIN,WIND,XY,ROLL')
+            else
+            fprintf(obj.sc,[':TIMebase:MODE ' mode])
+            end
+        end
+        
         function setTimebase(obj,time)
             fprintf(obj.sc,[':TIMebase:RANGe ' num2str(time)]);
         end
@@ -139,7 +177,7 @@ classdef keysightScope < handle
             
         end
         
-        function getScreen(obj)
+        function plotScreen(obj)
             figure;
             hold on
             for i=1:4
@@ -149,7 +187,6 @@ classdef keysightScope < handle
             xlabel('T[s]');
             ylabel('V[V]');
             title([obj.scopename ' ' datestr(now)]);
-            
         end
         
         function out=SCPISend(obj,msg)
@@ -197,6 +234,14 @@ classdef keysightScope < handle
             
             fprintf(obj.sc,[':CHANNEL' num2str(chanum) ':DISPLAY ' num2str(state)]);
         end
+        
+        function chans=getActiveChans(obj)
+            chans=zeros(1,4);
+            for i=1:4    
+                chans(i)=str2num(query(obj.sc,[':CHANNEL' num2str(i) ':DISPLAY?']));
+            end
+        end
+        
         
         function delete(obj)
             fclose(obj.sc);

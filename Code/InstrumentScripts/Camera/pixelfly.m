@@ -137,11 +137,19 @@ classdef pixelfly < handle
             
         end
         
-        function setHardwareTrig(obj)
+        function setHardwareTrig(obj,nTrigs)
+            %nTrigs is the number of images to be acquired
+            if nargin==1
+                obj.handle.TriggerRepeat=0;
+            else
+                obj.handle.TriggerRepeat=nTrigs-1;
+            end
+            
             if obj.getState==1
                 obj.stop
             end
                 triggerconfig(obj.handle, 'hardware', '', 'ExternExposureStart');
+                
                 fprintf('hardware mode set to ext trigger. \nCamera status: Stopped\n');
             
         end
@@ -175,6 +183,7 @@ classdef pixelfly < handle
             if nargin<2
                 N=1;
             end
+           
             if ~obj.state
                 error('cannot get images when camera is not running');
             else

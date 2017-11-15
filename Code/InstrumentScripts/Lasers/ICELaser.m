@@ -6,14 +6,14 @@ classdef ICELaser < handle
         comport
         s %serial communication variable
         slot %where the current driver card is installed
-        T1chan %T1 cooling channel 
+        T1chan %T1 cooling channel
         T2chan %T2 cooling channel
         
     end
     
-      properties (Dependent)
-      LasingStatus
-   end
+    properties (Dependent)
+        LasingStatus
+    end
     
     methods
         function obj=ICELaser(comport,slot,T1chan,T2chan)
@@ -22,25 +22,25 @@ classdef ICELaser < handle
             obj.T1chan=num2str(T1chan);
             obj.T2chan=num2str(T2chan);
             obj.comport=comport;
-            try
-                fopen(obj.s); %open the serial connection
-            catch err
-                if strcmpi(err.identifier,'MATLAB:serial:fopen:opfailed')
-                    warning('Connection already open');
-                    fclose(instrfind);
-                    fopen(obj.s);
-                else
-                    warning(['Problem opening serial connection:' err.identifier]);
-                end
-            end
+            %             try
+            %                 fopen(obj.s); %open the serial connection
+            %             catch err
+            %                 if strcmpi(err.identifier,'MATLAB:serial:fopen:opfailed')
+            %                     warning('Connection already open');
+            % %                     fclose(instrfind);
+            % %                     fopen(obj.s);
+            %                 else
+            %                     warning(['Problem opening serial connection:' err.identifier]);
+            %                 end
+            %             end
             
             
         end
         
-        function delete(obj)
-            fclose(obj.s);
-            warning(['serial connection closed in Laser: ' inputname(1)]);
-        end
+        %         function delete(obj)
+        %             fclose(obj.s);
+        %             warning(['serial connection closed in Laser: ' inputname(1)]);
+        %         end
         
         function staus=get.LasingStatus(obj)
             staus=obj.getLaserStat;
@@ -59,23 +59,27 @@ classdef ICELaser < handle
             end
         end
         
-        function resp=sendSerialCommand(obj,varargin)
-            command='';
-            if strcmpi(obj.s.Status,'closed')
-                try
-                    fopen(obj.s);
-                catch err
+        function resp=sendSerialCommand(obj,command)
+            
+%             if strcmpi(obj.s.Status,'closed')
+%                 try
+%                     fopen(obj.s);
+%                 catch err
 %                     warning(['Cannot communicate with laser:' err.identifier]);
-                    fclose(instrfind);
-                    fopen(obj.s);
-                end
-            else
-                command=strjoin(varargin,' ');
+%                     
+%                                         fclose(instrfind);
+%                                         fopen(obj.s);
+%                 end
+%             else
+%                 command=strjoin(varargin,' ');
+                fopen(obj.s);
                 command = [command char(13)];
+%                 disp(command)
                 fprintf(obj.s,command);
                 resp=fscanf(obj.s);
                 resp=resp(1:end-1);
-            end
+                fclose(obj.s);
+%             end
         end
         
         
@@ -84,7 +88,7 @@ classdef ICELaser < handle
             %This function checks the quality of the laser lock.
             %The function takes the RMS of the laser error signal, over N=15 measurments with dt = 100ms difference.
             %If the error is above the threshhold of 0.1?(Make sure this is true!!) then is it rejected.
-            N = 15; %Number of samples
+            N = 10; %Number of samples
             dt = 0.1; %pause time
             T = dt*N; %total time of measurment
             error = zeros(1,N);
@@ -100,7 +104,7 @@ classdef ICELaser < handle
                 fprintf(['RMS error: %f [V]\n' inputname(1) ' Laser Lock failed\n'],rmsError);
                 laserLockStat=0;
             else
-                fprintf(['RMS error: %f [V]\n' inputname(1) ' Laser Lock success!\n'],rmsError);  
+                fprintf(['RMS error: %f [V]\n' inputname(1) ' Laser Lock success!\n'],rmsError);
                 laserLockStat=1;
             end
         end
@@ -121,15 +125,15 @@ classdef ICELaser < handle
             %             this function checks if we are servoing temp in
             %             specified chan and checks for both if none
             %             specified
-           
+            
             obj.sendSerialCommand('#Slave 1');
             if nargin ==1
-            t1stat=obj.sendSerialCommand(['Servo? ' obj.T1chan]);
-            
-            t2stat=obj.sendSerialCommand(['Servo? ' obj.T2chan]);
-            
-            disp(['t1 stat is ' num2str(t1stat)]);
-            disp(['t2 stat is ' num2str(t2stat)]);
+                t1stat=obj.sendSerialCommand(['Servo? ' obj.T1chan]);
+                
+                t2stat=obj.sendSerialCommand(['Servo? ' obj.T2chan]);
+                
+                disp(['t1 stat is ' num2str(t1stat)]);
+                disp(['t2 stat is ' num2str(t2stat)]);
             else
                 stat=obj.sendSerialCommand(['Servo? ' num2str(chan)]);
                 disp(['chan ' num2str(chan) ' stat is ' num2str(stat)]);
@@ -233,13 +237,13 @@ classdef ICELaser < handle
         %% laser control board functions
         function stat=getLaserStat(obj)
             obj.sendSerialCommand(['#Slave ' obj.slot]);
-            stat=obj.sendSerialCommand('Laser?');                    
+            stat=obj.sendSerialCommand('Laser?');
         end
         
         function stat=setLaserStat(obj,bool)
             %This function turnes on\off the laser. Before it does this it checks
             %if the temp of the laser is stabliezd.
-       
+            
             bool = obj.boolChck(bool); %Check that bool is 'on' or 'off'
             
             obj.sendSerialCommand(['#Slave ' obj.slot]);
@@ -278,7 +282,7 @@ classdef ICELaser < handle
         function stat=getCurrLim(obj)
             obj.sendSerialCommand(['#Slave ' obj.slot]);
             stat=obj.sendSerialCommand('CurrLim?');
-           
+            
         end
         
         function stat=setCurrLim(obj,CurrentLim)
@@ -290,11 +294,16 @@ classdef ICELaser < handle
         %% offset lock functions
         
         function N=getMultiplyer(obj)
-            obj.sendSerialCommand(['#Slave ' obj.slot]);
-            N=str2double(obj.sendSerialCommand('N?'));
-            
-            
-            
+            fopen(obj.s);
+            fprintf(obj.s,['#Slave ' obj.slot char(13)]);
+            %             obj.sendSerialCommand(['#Slave ' obj.slot]);
+            resp=fscanf(obj.s);
+            resp=resp(1:end-1);
+            fprintf(obj.s,['N?' char(13)]);
+            resp=fscanf(obj.s);
+            resp=resp(1:end-1);
+            fclose(obj.s);
+            N=str2double(resp);
         end
         
         function N=setPhaseLockMultiplyer(obj,mult)
@@ -353,6 +362,7 @@ classdef ICELaser < handle
             %that the actual signal in the PLL is multiplied by the multiplier.
             obj.sendSerialCommand(['#Slave ' obj.slot]);
             intRefStat=obj.sendSerialCommand(['IntFreq ' num2str(freq)]);
+            assert(abs(str2double(obj.getIntFreq)-freq)<0.01)
         end
         
         function laserServo=getLaserServoStat(obj)
@@ -369,11 +379,11 @@ classdef ICELaser < handle
             obj.sendSerialCommand(['#Slave ' obj.slot]);
             laserServo=obj.sendSerialCommand(['Servo ' bool]);
             
-          
+            
             if strcmp(bool,'On')
                 if obj.getFreqLockStat == 0
                     obj.sendSerialCommand(['Servo ' 'Off']);
-           
+                    
                     error('Lock failed!')
                 end
             end
@@ -381,26 +391,26 @@ classdef ICELaser < handle
             
             
         end
-    
-    
-    
-    function val=getOutput(obj,outputChan)
-    %This function returnes the value of the output channel with respect to the following table:
-    % 1 - Servo Out
-    % 2 - Error Signal
-    % 3 - NA
-    % 4 - NA
-    % 5 - Laser Current (1V = 1A)
-    % 6 - +2.5V Ref
-    % 7 - NA
-    % 8 - Ground
-    
-    obj.sendSerialCommand(['#Slave ' obj.slot]);
-    val=obj.sendSerialCommand(['ReadVolt ' num2str(outputChan)]);
-    
+        
+        
+        
+        function val=getOutput(obj,outputChan)
+            %This function returnes the value of the output channel with respect to the following table:
+            % 1 - Servo Out
+            % 2 - Error Signal
+            % 3 - NA
+            % 4 - NA
+            % 5 - Laser Current (1V = 1A)
+            % 6 - +2.5V Ref
+            % 7 - NA
+            % 8 - Ground
+            
+            obj.sendSerialCommand(['#Slave ' obj.slot]);
+            val=obj.sendSerialCommand(['ReadVolt ' num2str(outputChan)]);
+            
+        end
+        
     end
-    
-end
 end
 
 

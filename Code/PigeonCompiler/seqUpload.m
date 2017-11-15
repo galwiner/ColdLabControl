@@ -1,14 +1,16 @@
 function seqUpload(seq,DEBUG)
 
 
-%%% Comment 
+%%% DEBUG enables sequence print and disables actual upload to FPGA 
 if nargin==1
     DEBUG=0;
 end
     prog=CodeGenerator;
     prog.GenSeq(seq);
     prog.GenFinish;
+if DEBUG
     prog.DisplayCode;
+end
 
 if ~DEBUG
     try

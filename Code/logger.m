@@ -8,7 +8,7 @@ if ~exist(logname,'file')
 else
     f=fopen(logname,'a');
 end
-
-update=['this\t' datestr(now) '\n'];
+[~,fname]=fileparts(fname);
+update=[fname '\t' datestr(now) '\n'];
 fprintf(f,update);
 end

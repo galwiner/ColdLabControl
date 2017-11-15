@@ -6,7 +6,7 @@ function freq = coolingDetToFreq(det,multiplier)
 
 % freq in MHz
 Master_freq = 384230406.373; %Only the 5S1/2 to p3/2 transition in Rb85
-Master_freq = Master_freq -1264.888; %Move to the F=3 level
+Master_freq = Master_freq -1264.8885163; %Move to the F=3 level
 Master_freq = Master_freq +100.205; %Move to the F'=4 level
 
 fineSplit_freq = 384230484.4685; %5S(1/2) to 5P(3/2) Rb 87
@@ -14,7 +14,11 @@ Resonant_freq= fineSplit_freq - 2563.005979089; %F=2 in the lower state is shift
 Resonant_freq = Resonant_freq+193.7408; %F'=3 in the upper manifold is shifted up
 AOM_shift=220; %double pass AOM at 110MHz order +1,+1. atoms see 220MHz more than the lock freq so the lock needs to be lower than the res freq.
 
+freq_on_atoms=Resonant_freq+det;
+freq_on_WLM=freq_on_atoms-AOM_shift; %because the AOM shifts us +220 MHZ we want to select a laser freq that is 220MHZ below that point
+freq=(Master_freq-freq_on_WLM)/multiplier; % freq we set for the RF (the beat note freq with the master)
+
 % freq=abs(Resonant_freq-AOM_shift+det-Master_freq)/multiplier;
-freq=(Master_freq+AOM_shift-Resonant_freq+det)/multiplier;
+
 end
 
