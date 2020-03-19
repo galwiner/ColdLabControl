@@ -1,0 +1,31 @@
+clear all;
+instrreset;
+global p;
+global r;
+global inst;
+initp;
+p.hasTTresults = 1;
+p.ttDumpMeasurement = 1;
+p.expName = 'EIT vs probe power';
+initinst;
+initr;
+ %%
+p.NInner = 30;
+p.NOuter = 5;
+p.NAverage = 3;
+p.loopVals{1} = linspace(-15,15,p.NInner);
+p.loopVars{1} = probeDet;
+p.probeDet = p.INNERLOOPVAR;
+p.loopVals{2} = logspace(-12.-10,p.NOuter);
+p.loopVars{2} = probeDet;
+p.probePower = p.OUTERLOOPVAR;
+
+p.s = sqncr;
+p.s.addBlock({'setProbeDetuning','detuning',p.probeDet,'from',2,'to',3,'multiplier',8});
+p.s.addBlock({'setProbePower','duration',0,'value',p.probePower});
+p.s.addBlock({'forStart'});
+p.s.addBlock({'measureSPCMOnlyProbe'});
+p.s.addBlock({'forEnd','value',p.gateNum});
+p.s.addBlock({'Reload MOT'});
+p.s.addBlock({'GenPause','duration',1e4});
+p.s.run;

@@ -40,6 +40,7 @@ classdef Tcp2Labview <handle
         end
         
         function Delete(obj)
+            disp('called')
 %             if (obj.UseOpenChannel==false)
 %                 fclose(obj.TcpID);
 %                 delete(obj.TcpID);
@@ -60,7 +61,7 @@ classdef Tcp2Labview <handle
             try 
                 fwrite(obj.TcpID,int8(0),'int8');
             catch FW
-                disp(sprintf('Error:%s. Re-establishing TCP connection',FW.identifier));              
+                fprintf('Error:%s. Re-establishing TCP connection\n',FW.identifier);              
                 establishConnection(obj);
             end
             % set [address  block size in int16 ]
@@ -125,12 +126,13 @@ classdef Tcp2Labview <handle
         end
         
         function Execute(obj,repeatnum)
+            
             %------------- execute-----------------
             % set the server to read from client
             fwrite(obj.TcpID,int8(0),'int8');
             % set  repeat program
             fwrite(obj.TcpID,int16([2 1 repeatnum]),'int16');
-            pause(0.005); %  !!!!! originally 0.05! !!!!!!!
+            pause(0.05); %  !!!!! originally 0.05! !!!!!!!
             % make sure repeat was updated!
             fwrite(obj.TcpID,int8(1),'int8'); %set server to write to client
             fwrite(obj.TcpID,[2 1],'int16'); %get one byte, address 2
@@ -215,7 +217,7 @@ classdef Tcp2Labview <handle
         function WaitForHostIdle(obj,timelimit)
             HostProcess=1;
             if ~exist('timelimit')
-                timelimit=3; % 60 so time limit, in seconds
+                timelimit=60; % 60 so time limit, in seconds
             end
             tich=tic;
             while (HostProcess~=0)&&(toc(tich)<timelimit)

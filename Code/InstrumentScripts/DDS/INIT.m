@@ -1,15 +1,16 @@
 function [  ] = INIT(obj,parallel,DRG,Singlemode,OSK,REF1,TCXO1)
 
-
+if isempty(obj.s)
 obj.s = serial(obj.comport,'BaudRate',9600,'DataBits',8);
-
+end
+if ~strcmpi(obj.s.Status,'open')
 fopen(obj.s);
-
-pause(1000e-3);
+end
+pause(100e-3);
 
 cfr2_0_7='00';
 cfr2_16_23='40';
-cfr1_8_15='00'
+cfr1_8_15='00';
 
 if (parallel==1)
     
@@ -166,10 +167,10 @@ fwrite(obj.s,Dac_0_7);
 %
 ASF_address=bin2dec('00001001');
 
-ASF_24_31=hex2dec(ASF_24_31)
-ASF_16_23=hex2dec(ASF_16_23)
-ASF_8_15=hex2dec(ASF_8_15)
-ASF_0_7=hex2dec(ASF_0_7)
+ASF_24_31=hex2dec(ASF_24_31);
+ASF_16_23=hex2dec(ASF_16_23);
+ASF_8_15=hex2dec(ASF_8_15);
+ASF_0_7=hex2dec(ASF_0_7);
 
 fwrite(obj.s,ASF_address);
 fwrite(obj.s,ASF_24_31);
@@ -183,10 +184,8 @@ fwrite(obj.s,CONTROL);
 %%%   %%%%   %%%%
 
 
-fclose(obj.s);
+% fclose(obj.s);
 
-disp('DDS init success\n')
-
-
+disp('DDS init success')
 end
 

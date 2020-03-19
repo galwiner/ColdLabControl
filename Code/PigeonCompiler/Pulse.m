@@ -39,8 +39,15 @@ classdef Pulse
         Phase;
         setPhase=false;
         Amp;
+        
+        
         setAmp=false;
         analog=false;
+        inverted=false;
+        ramp=false;
+        rampStepSize; %step size for the analog ramp: 16 bit integer. 2^16/stepSize = number of steps from start current -> end current
+        rampTime; %duration of the ramp in 10 microsecond steps
+        rampFinalVal; %end current for the analog ramp (start current = wherever then channel is before the action)
     end
     % Class methods
     methods
@@ -69,8 +76,8 @@ classdef Pulse
                     case 'amp'
                         obj.Amp=varargin{i+1};
                         obj.setAmp=true;
-                end; %switch
-            end;%for loop
+                end %switch
+            end%for loop
         end % pulse
         
         function P=Shift(obj,t)
@@ -99,7 +106,36 @@ classdef Pulse
                 te=pulses{i}.Tend;
                 ch=pulses{i}.Channel;
                 if (pulses{i}.analog)
-                    if (te-ts)==0
+                    if pulses{i}.Channel==29 %start for loop
+                        timearray(index,:)=[ts,ch,7,0];
+                         index=index+1;
+                    elseif pulses{i}.Channel==30
+                        val=pulses{i}.voltage;
+                        timearray(index,:)=[ts,ch,7,val];
+                         index=index+1;
+                    
+                    else
+                        if pulses{i}.ramp
+                        
+                        %                         val=str2double(sprintf('%02d%03d',pulses{i}.rampPts,pulses{i}.rampFinalVal));
+                        
+                        val=bi2de([de2bi(ceil(pulses{i}.rampTime),16) de2bi(pulses{i}.rampFinalVal,15)]);
+                        if pulses{i}.rampTime<5 || pulses{i}.rampTime>5e4
+                            warning('you are attempting a ramp shorter than 50 uS or longer than 500mS. are you sure?');
+                        end
+                        
+                        %                         if pulses{i}.rampFinalVal>220
+                        %                             error('Final analog ramp current > 220A')
+                        %                         end
+                        if pulses{i}.Channel==26 %cooling ramp
+                            timearray(index,:)=[ts,ch,5,val];
+                            
+                        else %circular coil ramp
+                            timearray(index,:)=[ts,ch,4,val];
+                        end
+                        index=index+1;
+                        
+                    elseif (te-ts)==0
                         % only ON pulse
                         timearray(index,:)=[ts,ch,1,pulses{i}.voltage];
                         index=index+1;
@@ -109,9 +145,15 @@ classdef Pulse
                         index=index+1;
                         precede=0;
                     else
-                        timearray(index,:)=[ts,ch,1,pulses{i}.voltage];
-                        timearray(index+1,:)=[te,ch,2,0];
+                        if pulses{i}.inverted
+                            timearray(index,:)=[ts,ch,2,0];
+                            timearray(index+1,:)=[te,ch,1,pulses{i}.voltage];
+                        else
+                            timearray(index,:)=[ts,ch,1,pulses{i}.voltage];
+                            timearray(index+1,:)=[te,ch,2,0];
+                        end
                         index=index+2;
+                        end
                     end
                 else
                     if (te-ts)==0
@@ -124,66 +166,74 @@ classdef Pulse
                         index=index+1;
                         precede=0;
                     else
-                        timearray(index,:)=[ts,ch,1,0];
-                        timearray(index+1,:)=[te,ch,2,0];
+                        if pulses{i}.inverted
+                            timearray(index,:)=[ts,ch,2,0];
+                            timearray(index+1,:)=[te,ch,1,0];
+                        else
+                            timearray(index,:)=[ts,ch,1,0];
+                            timearray(index+1,:)=[te,ch,2,0];
+                        end
                         index=index+2;
                     end
-                    if (pulses{i}.setFreq)
-                        timearray(index,:)=[ts-precede,ch,3,pulses{i}.Freq];
-                        precede=precede+20;
-                        index=index+1;
-                    end
-                    if (pulses{i}.setAmp)
-                        timearray(index,:)=[ts-precede,ch,5,pulses{i}.Amp];
-                        precede=precede+20;
-                        index=index+1;
-                    end
-                    if (pulses{i}.setPhase)
-                        timearray(index,:)=[ts-precede,ch,4,pulses{i}.Phase];
-                        index=index+1;
-                    end
+                    %                     if (pulses{i}.setFreq)
+                    %                         timearray(index,:)=[ts-precede,ch,3,pulses{i}.Freq];
+                    %                         precede=precede+20;
+                    %                         index=index+1;
+                    %                     end
+                    %                     if (pulses{i}.setAmp)
+                    %                         timearray(index,:)=[ts-precede,ch,5,pulses{i}.Amp];
+                    %                         precede=precede+20;
+                    %                         index=index+1;
+                    %                     end
+                    %                     if (pulses{i}.setPhase)
+                    %                         timearray(index,:)=[ts-precede,ch,4,pulses{i}.Phase];
+                    %                         index=index+1;
+                    %                     end
+                    
+                    
+                    
                 end
-            end
-            timearray(index:end,:)=[];
-            timearray=sortrows(timearray);
-        end %Sequence2TimeLine
-        
-        function PlotTimeLine(timearray)
-            %timearray as retuerned by Sqeuqnce2TimeLine
-            % This function is currently BROKEN channelInfo used to be stored inside
-            % Pulse but it is not a PulseChannelInfo object. need to fix this if we
-            % want to use this functionality.
-            p=Pulse(1,1,1); % only for the ChannelInfo
-            channels=sort(unique(timearray(:,2)));
-            numofchannels=size(channels,1);
-            timelength=size(timearray,1);
-            y=zeros(timelength,numofchannels);
-            ch=find(channels == timearray(1,2));
-            y(1,ch)=(timearray(1,3)==1)*1+(timearray(1,3)==2)*0;
-            for i=2:timelength
-                y(i,:)=y(i-1,:);
-                ch=find(channels == timearray(i,2));
-                y(i,ch)=(timearray(i,3)==1)*1+(timearray(i,3)==2)*0;
-            end
-            % add zeros at t=0;
-            timearray=[0 ;timearray(:,1)];
-            y=[zeros(1,numofchannels); y];
-            % shift channels in the y axis
-            y=y+2*ones(size(y,1),1)*(1:numofchannels);
-            stairs(timearray/10,y);
-            xlabel('Time[\mus]');
-            grid;
-            
-            %add legend
-            for i=1:numofchannels
-                text(10,i*2+0.5,p.ChannelInfo(channels(i)).ChannelName);
-            end
-            legend(p.ChannelInfo(channels).ChannelName);
-            a=axis;
-            axis([a(1) a(2) a(3)-1 a(4)+3]);
-        end % plottimeline
-        
-    end % methods static
+        end
+        timearray(index:end,:)=[];
+        timearray=sortrows(timearray);
+    end %Sequence2TimeLine
     
+    function PlotTimeLine(timearray)
+    %timearray as retuerned by Sqeuqnce2TimeLine
+    % This function is currently BROKEN channelInfo used to be stored inside
+    % Pulse but it is not a PulseChannelInfo object. need to fix this if we
+    % want to use this functionality.
+    p=Pulse(1,1,1); % only for the ChannelInfo
+    channels=sort(unique(timearray(:,2)));
+    numofchannels=size(channels,1);
+    timelength=size(timearray,1);
+    y=zeros(timelength,numofchannels);
+    ch=find(channels == timearray(1,2));
+    y(1,ch)=(timearray(1,3)==1)*1+(timearray(1,3)==2)*0;
+    for i=2:timelength
+        y(i,:)=y(i-1,:);
+        ch=find(channels == timearray(i,2));
+        y(i,ch)=(timearray(i,3)==1)*1+(timearray(i,3)==2)*0;
+    end
+    % add zeros at t=0;
+    timearray=[0 ;timearray(:,1)];
+    y=[zeros(1,numofchannels); y];
+    % shift channels in the y axis
+    y=y+2*ones(size(y,1),1)*(1:numofchannels);
+    stairs(timearray/10,y);
+    xlabel('Time[\mus]');
+    grid;
+    
+    %add legend
+    for i=1:numofchannels
+        text(10,i*2+0.5,p.ChannelInfo(channels(i)).ChannelName);
+    end
+    legend(p.ChannelInfo(channels).ChannelName);
+    a=axis;
+    axis([a(1) a(2) a(3)-1 a(4)+3]);
+    end % plottimeline
+    
+end % methods static
+
 end % classdef
 

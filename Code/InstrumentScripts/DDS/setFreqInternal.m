@@ -1,11 +1,6 @@
 function [  ] = setFreqInternal(obj,fout,offset_phase,Adb)
-
-
-
-
-
-obj.s = serial(obj.comport,'BaudRate',9600,'DataBits',8);
-fopen(obj.s);
+% obj.s = serial(obj.comport,'BaudRate',9600,'DataBits',8);
+% fopen(obj.s);
 %   pause(1000e-3);
 %    fout=100;
 fsys=1000;
@@ -32,7 +27,7 @@ x4=binvec2dec(p4);
 
 
 p5=a(25:32);
-x5=binvec2dec(p5)
+x5=binvec2dec(p5);
 
 p6=a(17:24);
 x6=binvec2dec(p6);
@@ -41,7 +36,7 @@ p7=a(9: 16);
 x7=binvec2dec(p7);
 
 p8=a(1:8);
-x8=binvec2dec(p8)
+x8=binvec2dec(p8);
 
 
 
@@ -68,7 +63,7 @@ fwrite(obj.s,x7);
 fwrite(obj.s,x8);
 
 %
-fclose(obj.s) ;
+% fclose(obj.s) ;
 
 disp('DDS: Freq set success')
 

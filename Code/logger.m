@@ -1,4 +1,10 @@
-function logger(logname,fname)
+function logger(logname,fname,expname)
+global p
+global r
+if nargin==2
+    expname='none';
+end
+
 % function to create and update the daily log
 if ~exist(logname,'file')
     f=fopen(logname,'w');
@@ -9,6 +15,7 @@ else
     f=fopen(logname,'a');
 end
 [~,fname]=fileparts(fname);
-update=[fname '\t' datestr(now) '\n'];
+update=[fname '\t' expname '\t' datestr(now) '\n'];
 fprintf(f,update);
+fclose(f);
 end

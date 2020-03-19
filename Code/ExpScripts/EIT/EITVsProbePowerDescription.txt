@@ -1,0 +1,1 @@
+get EIT spectrum for different probe powers

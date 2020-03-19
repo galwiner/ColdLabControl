@@ -1,0 +1,8 @@
+function power = controlV2Power(V,gain,nd)
+%L.D & T.Z 19/03/20
+%this function uses the calibration of control power (before the cell) to
+%power detector voltage (measured with 1MOhm termination) after the cell.
+if ~strcmp(nd,'0')||~strcmp(nd,'2_01')
+base_str = 'control_power_2_PD_V_ND';
+base_str = 
+end

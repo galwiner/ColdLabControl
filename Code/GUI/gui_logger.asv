@@ -1,0 +1,5 @@
+function gui_logger(app,message)
+    temp=app.StatusTextArea.Value;
+    app.StatusTextArea.Value=[temp;message];
+    save
+end

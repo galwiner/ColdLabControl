@@ -1,0 +1,2 @@
+%alias for basicReleaseMOT
+basicReleaseMOT

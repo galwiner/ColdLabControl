@@ -2,10 +2,14 @@
 %script to load all required control system params and generate p params
 %object
 %assumes ControlSystem code base is in path
-load('channelTable.mat')
+%p is the parameter structure
+load('channelTable.mat');
+load('p.mat');
 
 sequencesDir=dir(fileparts(which('LoadMotSeq')));
 sequencesDir=sequencesDir(~ismember({sequencesDir.name},{'.','..'}));
+
+% p=updatep(p);
 
 % ControlSystemDir=whi
 %%import physical constants in MKS %%
@@ -22,4 +26,7 @@ consts.hbar=1.0545718e-34;%m^2*kg/s
 consts.Gamma=6.066; %natural line width in MHz
 %pixelfly params structure
 % p.cam_params(1);
+BiasPsu1=BiasPSU('TCPIP::10.10.10.106::inst0::INSTR'); %Y bias coils on Chan 1, Z Bias coil on Chan 2
+BiasPsu2=BiasPSU('TCPIP::10.10.10.107::inst0::INSTR'); %X Bias coil on Chan 2
+
 
