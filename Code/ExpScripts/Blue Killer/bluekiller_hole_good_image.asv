@@ -5,7 +5,6 @@ global inst
 DEBUG=0;
 initp
 p.hasTTresults = 0;
-p.kdc = 1;
 p.ttDumpMeasurement = 0;
 p.hasPicturesResults=1;
 p.picsPerStep = 1;

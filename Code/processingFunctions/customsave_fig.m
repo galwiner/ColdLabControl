@@ -19,7 +19,7 @@ date_base=datestr(datetime('now'),'ddmmYY');
 if ~isfield(p,'expName')
     p.expName = 'no exp name';
 end
-if isempty(p.loopVals)
+if ~isfield(p,'loopVals') || isempty(p.loopVals)
 file_name = [date_base '_' num2str(pfileInd,'%02.0f') '_' p.expName];
 elseif length(p.loopVals)==1
     file_name = [date_base '_' num2str(pfileInd,'%02.0f') '_' p.expName '_' p.loopVars{1} '_' num2str(p.loopVals{1}(1),'%5.3f') '_' num2str(p.loopVals{1}(end),'%5.3f')];
