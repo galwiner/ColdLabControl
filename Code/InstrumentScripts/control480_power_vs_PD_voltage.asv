@@ -1,5 +1,0 @@
-control_power = [70,56,38,22,13,1.3,0];
-control_V = [9.3,7.2,5,2.7,1.6,0.08,-0.091];
-ND = '2_01';
-gain = 40;
-save(['control_power_2_PD_V_ND_' ND '_gain_' num2str(gain)],'control_power','control_V','ND','gain');

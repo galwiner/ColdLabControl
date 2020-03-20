@@ -19,8 +19,8 @@ initinst
 initr
 p.expName = 'Hole good image';
 %% 
-inst.BiasFieldManager.I=[0.045   -0.0850    0.105]; %B field values to center MOT on camera
-% inst.BiasFieldManager.I=p.Blue_Killer_I;
+% inst.BiasFieldManager.I=[0.045   -0.0850    0.105]; %B field values to center MOT on camera
+inst.BiasFieldManager.I=p.Blue_Killer_I;
 p.s=sqncr();
 p.s.addBlock({'setDigitalChannel','channel','CTRL480Shutter','value','low','duration',0});
 p.s.addBlock({'setDigitalChannel','channel','ControlSwitch','value','high','duration',0});

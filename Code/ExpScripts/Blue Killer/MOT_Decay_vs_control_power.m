@@ -27,7 +27,14 @@ p.s.addBlock({p.compoundActions.ReleaseMOT});
 p.s.addBlock({'pause','duration',1e5});
 p.s.addBlock({p.compoundActions.TrigScope});
 p.s.run
-p.NoLightVal = mean(r.scopeRes{1}(:,2));
+t0Ind = find(r.scopeDigRes{1}(:,2,1)==1,1)+100;
+t0 = r.scopeRes{1}(t0Ind,1,1);
+tf = p.measTime*1e-6+t0;
+tfInd = find(r.scopeRes{1}(:,1,1)>tf,1)-100;
+if isempty(tfInd)
+   tfInd = size(r.scopeRes{1},1);
+end
+p.NoLightVal = mean(r.scopeRes{1}(t0Ind:tfInd,2));
 p.s=sqncr();
 p.s.addBlock({p.compoundActions.ReleaseMOT});
 p.s.addBlock({'pause','duration',1e5});
@@ -35,7 +42,14 @@ p.s.addBlock({p.atomicActions.setDigitalChannel,'channel',p.chanNames.coolingSwi
 p.s.addBlock({p.atomicActions.setDigitalChannel,'channel',p.chanNames.repumpSwitch,'value','high','duration',0})
 p.s.addBlock({p.compoundActions.TrigScope});
 p.s.run
-p.NoAtomsVal = mean(r.scopeRes{1}(:,2));
+t0Ind = find(r.scopeDigRes{1}(:,2,1)==1,1)+100;
+t0 = r.scopeRes{1}(t0Ind,1,1);
+tf = p.measTime*1e-6+t0;
+tfInd = find(r.scopeRes{1}(:,1,1)>tf,1)-100;
+if isempty(tfInd)
+   tfInd = size(r.scopeRes{1},1);
+end
+p.NoAtomsVal = mean(r.scopeRes{1}(t0Ind:tfInd,2));
 p.MOTLoadTime=3e6;
 p.s=sqncr();
 p.s.addBlock({p.atomicActions.setDigitalChannel,'channel',p.chanNames.ControlSwitch,'value','low','duration',0})
@@ -49,17 +63,17 @@ p.bare_MOT_loading = r.scopeRes{1}(:,2);
 pause(10);
 p.M2scanMode = 0;
 p.NAverage=1;
-p.min_power = 1.6;
+p.min_power = 1.1;
 p.max_power = 85;
 % p.min_power = 0.01;
-% p.max_power = 1.5;
+% p.max_power = 0.5;
 p.rabis = logspace(log10(sqrt(p.min_power)),log10(sqrt(p.max_power)),40);
 p.loopVals{1} = p.rabis.^2;
 p.loopVars{1} = 'controlPower';
 p.controlPower = p.INNERLOOPVAR;
 % p.controlND = [16];
 p.controlND = [];
-p.level = '91S';
+p.level = '80S';
 if isempty(p.controlND)
   p.control_pd_gain = 40;
     p.control_pd_nd = '2_01';  
@@ -80,7 +94,7 @@ p.s.addBlock({p.atomicActions.setDigitalChannel,'channel',p.chanNames.ControlSwi
 p.s.addBlock({p.compoundActions.TrigScope});
 p.s.addBlock({'pause','duration',p.measTime})
 p.s.addBlock({p.atomicActions.setDigitalChannel,'channel',p.chanNames.CTRL480Shutter,'value','low','duration',0})
-p.s.addBlock({p.atomicActions.GenPause,'duration',1e6});
+p.s.addBlock({p.atomicActions.GenPause,'duration',3e6});
 p.s.run();
 
 

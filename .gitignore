@@ -1,4 +1,4 @@
-
+*.csv
 Training material/Intro to cold atom system.pptx
 Training material/Intro to cold atom system_part1.pptx
 NewSequencer/sqncr (ran.finkelstein@weizmann.ac.il).m
@@ -368,3 +368,6 @@ Code/processingFunctions/g2Processing/.idea/vcs.xml
 Code/processingFunctions/g2Processing/.idea/workspace.xml
 Code/Configurations/ProbePowerToSPCMCountRateCalibrationPData.mat
 Code/Configurations/ProbePowerToSPCMCountRateCalibrationTTData.mat
+*.asv
+.ipynb_checkpoints/Untitled-checkpoint.ipynb
+Code/processingFunctions/PlottingFuncs/plot_MOT_decay_vs_control_power.asv

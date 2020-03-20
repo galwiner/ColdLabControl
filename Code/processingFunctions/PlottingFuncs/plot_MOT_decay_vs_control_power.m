@@ -1,9 +1,12 @@
 global p;
 global r
 clear D
+
 powers = controlV2Power(squeeze(mean(r.scopeRes{1}(:,3,:),1)),p.control_pd_gain,p.control_pd_nd);
-t0Ind = find(r.scopeDigRes{1}(:,2,1)==1,1)*2+100;
-% t0Ind = 1;
+t0Ind = find(r.scopeDigRes{1}(:,2,1)==1,1)+100;
+if isempty(t0Ind)
+    t0Ind = 1;
+end
 t0 = r.scopeRes{1}(t0Ind,1,1);
 tf = p.measTime*1e-6+t0;
 tfInd = find(r.scopeRes{1}(:,1,1)>tf,1)-100;
@@ -11,9 +14,11 @@ if isempty(tfInd)
     tfInd = length(r.scopeRes{1}(:,1,1))-10;
 end
 D(:,:) = squeeze(r.scopeRes{1}(t0Ind:tfInd,2,:));
+if ~exist('goodInds','var')
 goodInds = ones(1,length(p.loopVals{1}));
-goodInds(1) = 0;
-goodInds(35) = 0;
+end
+% goodInds(1) = 0;
+% goodInds(35) = 0;
   ip = [5,0,0.5];
   lp = [0 0 0 ];
   up = [inf inf inf];
@@ -43,10 +48,10 @@ if strcmpi(l,'s')
 end
 rabi = getRabiRb87Sn(powers*1e-3,13*1e-3,n);
 dN = N0-Nf;
-rabi_log = logspace(log10(min(rabi)),log10(max(rabi)),1e3);
 dplit = dN./N0;
 ip = [1,0.92,0.95,0.97];
 co = colororder;
+if ~exist('no_new_fig','var')||no_new_fig==0
 figure;
 subplot(1,2,1)
 semilogx(rabi,dplit,'o');
@@ -57,9 +62,28 @@ grid minor
 set(gca,'MinorGridAlpha',1)
 %decay rate fit
 subplot(1,2,2)
+% hold on
 semilogx(rabi,beta,'o')
 ylabel('\beta [s^{-1}]');
 xlabel('\Omega_c [MHz]');
 grid minor
 set(gca,'MinorGridAlpha',1)
 set(gca,'FontSize',14)
+else
+    axes(ax1)
+    semilogx(rabi,dplit,'o');
+    ylabel('\DeltaN/N');
+    xlabel('\Omega_c [MHz]');
+    set(gca,'FontSize',14)
+    grid minor
+    set(gca,'MinorGridAlpha',1)
+    axes(ax2)
+    semilogx(rabi,beta,'o')
+    ylabel('\beta [s^{-1}]');
+    xlabel('\Omega_c [MHz]');
+    grid minor
+    set(gca,'MinorGridAlpha',1)
+    set(gca,'FontSize',14)
+end
+
+

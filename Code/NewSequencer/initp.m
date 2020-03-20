@@ -243,7 +243,8 @@ p.runFixCycles = 1;
 %% synthHD
 p.synthHD = 1;
 %% blue killer params
-p.Blue_Killer_I = [0.030   -0.0895    0.090];
+% p.Blue_Killer_I = [0.030   -0.0895    0.090];
+p.Blue_Killer_I = [0.045   -0.0850    0.105]; %measured on 19/03/20
 %% kdc (motorized waveplate)
 p.kdcSN = 27253161;
 p.kdc = 0; %if 1, use kdc controller in initinst;
